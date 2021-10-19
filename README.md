@@ -6,8 +6,8 @@ Endpoints:
 
 | Method        | Endpoint      |  Description             |
 | ------------- | ------------- | ------------------------ |
-| POST          | /users/       | Create a user            |
-| GET           | /users/       | Get list of all users    |
+| POST          | /users       | Create a user            |
+| GET           | /users       | Get list of all users    |
 | GET           | /users/{id}   | Get user by id           |
 | PUT           | /users/{id}   | Update user by id        |
 | DELETE        | /users/{id}   | Delete user by id        |
