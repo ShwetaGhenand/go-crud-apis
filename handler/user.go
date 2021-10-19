@@ -109,12 +109,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error in decoding request body!", http.StatusBadRequest)
 			return
 		}
-		d, _ := isExist(user.ID)
-		if d {
-			log.Println("User alredy exists, duplicate user id!")
-			http.Error(w, "User alredy exists, duplicate user id!", http.StatusBadRequest)
+		if user.ID != 0 {
+			http.Error(w, "Id can not be updated!", http.StatusBadRequest)
 			return
 		}
+		user.ID = users[index].ID
 		users[index] = user
 		res, err := json.Marshal(&user)
 		if err != nil {
