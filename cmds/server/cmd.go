@@ -9,34 +9,25 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// user declartion
-type user struct {
-	ID      int
-	Name    string
-	Email   string
-	Phone   string
-	Age     int
-	Address string
-}
-
 // server declartion
 type server struct {
-	router *mux.Router
-	users  []user
+	router   *mux.Router
+	userRepo *userRepository
 }
 
-func newServer() *server {
+func newServer(url string) *server {
+	db := initDB(url)
 	s := &server{
-		router: mux.NewRouter(),
-		users:  make([]user, 0),
+		router:   mux.NewRouter(),
+		userRepo: &userRepository{db: db},
 	}
-	s.router.HandleFunc("/health", GetHealth).Methods("GET")
+	s.router.HandleFunc("/health", getHealth).Methods("GET")
 	sr := s.router.PathPrefix("/users").Subrouter()
-	sr.HandleFunc("", s.AddUser).Methods("POST")
-	sr.HandleFunc("", s.GetUsers).Methods("GET")
-	sr.HandleFunc("/{id}", s.GetUser).Methods("GET")
-	sr.HandleFunc("/{id}", s.UpdateUser).Methods("PUT")
-	sr.HandleFunc("/{id}", s.DeleteUser).Methods("DELETE")
+	sr.HandleFunc("", s.addUser).Methods("POST")
+	sr.HandleFunc("", s.getUsers).Methods("GET")
+	sr.HandleFunc("/{id}", s.getUser).Methods("GET")
+	sr.HandleFunc("/{id}", s.updateUser).Methods("PUT")
+	sr.HandleFunc("/{id}", s.deleteUser).Methods("DELETE")
 	return s
 }
 
@@ -48,6 +39,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Cmd : command to start the server
 func Cmd() *cli.Command {
 	var port int
+	var url string
 	return &cli.Command{
 		Name:  "server",
 		Usage: "users rest apis",
@@ -58,9 +50,14 @@ func Cmd() *cli.Command {
 				Usage:       "port to listen server",
 				Destination: &port,
 			},
+			&cli.StringFlag{
+				Name:        "url",
+				EnvVars:     []string{"DATABASE_URL"},
+				Destination: &url,
+			},
 		},
 		Action: func(c *cli.Context) error {
-			s := newServer()
+			s := newServer(url)
 			log.Println("Server is listening on port : ", port)
 			if err := http.ListenAndServe(fmt.Sprintf(":%d", port), s); err != nil {
 				log.Fatalln(err)
