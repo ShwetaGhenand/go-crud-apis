@@ -37,6 +37,31 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//loginUser : verify user details and generate jwt token
+func (s *server) loginUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Login user endpoint called.")
+	c := loginDto{}
+	_ = json.NewDecoder(r.Body).Decode(&c)
+	if c.Name == "" || c.Password == "" {
+		http.Error(w, "invalid login details", 400)
+		return
+	}
+	if err := s.service.UserExists(c.Name, c.Password); err != nil {
+		writeError(w, err)
+		return
+	}
+	t, err := generateToken(c)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(tokenDto{Token: t}); err != nil {
+		writeError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 // listUsers : returns list of users
 func (s *server) listUsers(w http.ResponseWriter, r *http.Request) {
 	log.Println("Get all users endpoint called.")

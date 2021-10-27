@@ -14,6 +14,7 @@ func createDtoToModel(dto userDto) User {
 	m := User{}
 	m.ID = int32(dto.ID)
 	m.Name = dto.Name
+	m.Password = dto.Password
 	m.Email = dto.Email
 	if dto.Phone != "" {
 		m.Phone = sql.NullString{String: dto.Phone, Valid: true}
@@ -40,6 +41,9 @@ func modelToDto(user User) userDto {
 	}
 	if user.Name != "" {
 		dto.Name = user.Name
+	}
+	if user.Password != "" {
+		dto.Password = user.Password
 	}
 	if user.Email != "" {
 		dto.Email = user.Email
@@ -103,6 +107,15 @@ func (s *service) updateUser(dto userDto) (userDto, error) {
 
 func (s *service) deleteUser(id int32) error {
 	err := s.db.DeleteUser(context.Background(), id)
+	if err != nil {
+		return checkError(err)
+	}
+	return nil
+}
+
+func (s *service) UserExists(n, p string) error {
+	arg := UserExistsParams{n, p}
+	_, err := s.db.UserExists(context.Background(), arg)
 	if err != nil {
 		return checkError(err)
 	}

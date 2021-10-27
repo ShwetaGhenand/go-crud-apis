@@ -1,3 +1,7 @@
+-- name: UserExists :one
+SELECT * FROM users
+WHERE name = $1 and password = $2;
+
 -- name: GetUser :one
 SELECT * FROM users
 WHERE id = $1 LIMIT 1;
@@ -8,9 +12,9 @@ ORDER BY name;
 
 -- name: CreateUser :one
 INSERT INTO users (
-  id, name, email, phone, age, address
+  id, name, password, email, phone, age, address
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 

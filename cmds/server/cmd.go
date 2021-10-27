@@ -26,8 +26,11 @@ func newServer(conf DBConfig) *server {
 		service: &service{db: db},
 	}
 	s.router.HandleFunc("/health", getHealth).Methods("GET")
+	s.router.HandleFunc("/signin", s.createUser).Methods("POST")
+	s.router.HandleFunc("/login", s.loginUser).Methods("POST")
+
 	sr := s.router.PathPrefix("/users").Subrouter()
-	sr.HandleFunc("", s.createUser).Methods("POST")
+	sr.Use(authMiddleware())
 	sr.HandleFunc("", s.listUsers).Methods("GET")
 	sr.HandleFunc("/{id}", s.getUser).Methods("GET")
 	sr.HandleFunc("/{id}", s.updateUser).Methods("PUT")
