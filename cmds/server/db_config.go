@@ -31,8 +31,8 @@ func (c *DBConfig) url() string {
 	return u.String()
 }
 
-func initDB(c DBConfig) (*Queries, error) {
-	cfg, err := pgx.ParseConfig(c.url())
+func initDB(conf DBConfig) (*Queries, error) {
+	cfg, err := pgx.ParseConfig(conf.url())
 	if err != nil {
 		return nil, err
 	}

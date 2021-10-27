@@ -5,8 +5,10 @@ services:
   db:
     image: postgres
     restart: always
-    env_file:
-    - .env
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=zyxwv
+      - POSTGRES_DB=userdb
     ports:
     - "5432:5432"
     environment:

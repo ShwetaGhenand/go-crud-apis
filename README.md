@@ -4,13 +4,14 @@ User Service is REST API server implementation using gorila/mux.
 
 Endpoints: 
 
-| Method        | Endpoint      |  Description             |
-| ------------- | ------------- | ------------------------ |
-| POST          | /users       | Create a user            |
-| GET           | /users       | Get list of all users    |
-| GET           | /users/{id}   | Get user by id           |
-| PUT           | /users/{id}   | Update user by id        |
-| DELETE        | /users/{id}   | Delete user by id        |
+| Method        | Endpoint      |  Description                                  |                   
+| ------------- | ------------- | --------------------------------------------- |
+| POST          | /signin       | Create a user                                 |
+| POST          | /login        | Verify user details and generate jwt token    |
+| GET           | /users        | Get list of all users                         |
+| GET           | /users/{id}   | Get user by id                                |
+| PUT           | /users/{id}   | Update user by id                             |
+| DELETE        | /users/{id}   | Delete user by id                             |
 
 ## Run locally
 

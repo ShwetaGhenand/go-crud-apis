@@ -10,53 +10,57 @@ type service struct {
 	db *Queries
 }
 
-func createDtoToModel(dto userDto) User {
+func reqToModel(req JSONUser) User {
 	m := User{}
-	m.ID = int32(dto.ID)
-	m.Name = dto.Name
-	m.Email = dto.Email
-	if dto.Phone != "" {
-		m.Phone = sql.NullString{String: dto.Phone, Valid: true}
+	m.ID = int32(req.ID)
+	m.Name = req.Name
+	m.Password = req.Password
+	m.Email = req.Email
+	if req.Phone != "" {
+		m.Phone = sql.NullString{String: req.Phone, Valid: true}
 	} else {
-		m.Phone = sql.NullString{String: dto.Phone, Valid: false}
+		m.Phone = sql.NullString{String: req.Phone, Valid: false}
 	}
-	if dto.Address != "" {
-		m.Address = sql.NullString{String: dto.Address, Valid: true}
+	if req.Address != "" {
+		m.Address = sql.NullString{String: req.Address, Valid: true}
 	} else {
-		m.Address = sql.NullString{String: dto.Address, Valid: false}
+		m.Address = sql.NullString{String: req.Address, Valid: false}
 	}
-	if dto.Age != 0 {
-		m.Age = sql.NullInt32{Int32: int32(dto.Age), Valid: true}
+	if req.Age != 0 {
+		m.Age = sql.NullInt32{Int32: int32(req.Age), Valid: true}
 	} else {
-		m.Age = sql.NullInt32{Int32: int32(dto.Age), Valid: false}
+		m.Age = sql.NullInt32{Int32: int32(req.Age), Valid: false}
 	}
 	return m
 }
 
-func modelToDto(user User) userDto {
-	dto := userDto{}
+func modelToRes(user User) JSONUser {
+	res := JSONUser{}
 	if user.ID != 0 {
-		dto.ID = int(user.ID)
+		res.ID = int(user.ID)
 	}
 	if user.Name != "" {
-		dto.Name = user.Name
+		res.Name = user.Name
+	}
+	if user.Password != "" {
+		res.Password = user.Password
 	}
 	if user.Email != "" {
-		dto.Email = user.Email
+		res.Email = user.Email
 	}
 	if user.Phone.Valid {
-		dto.Phone = user.Phone.String
+		res.Phone = user.Phone.String
 	}
 	if user.Address.Valid {
-		dto.Address = user.Address.String
+		res.Address = user.Address.String
 	}
 	if user.Age.Valid {
-		dto.Age = int(user.Age.Int32)
+		res.Age = int(user.Age.Int32)
 	}
-	return dto
+	return res
 }
 
-func (s *service) listUsers() ([]userDto, error) {
+func (s *service) listUsers() ([]JSONUser, error) {
 	users, err := s.db.ListUsers(context.Background())
 	if err != nil {
 		return nil, checkError(err)
@@ -64,45 +68,52 @@ func (s *service) listUsers() ([]userDto, error) {
 	if len(users) == 0 {
 		return nil, &customErr{errors.New("users not found"), 404}
 	}
-	var dtos []userDto
+	var res []JSONUser
 	for _, user := range users {
-		dtos = append(dtos, modelToDto(user))
+		res = append(res, modelToRes(user))
 	}
-	return dtos, nil
+	return res, nil
 }
 
-func (s *service) getUser(id int32) (userDto, error) {
+func (s *service) getUser(id int32) (JSONUser, error) {
 	user, err := s.db.GetUser(context.Background(), id)
-	dto := modelToDto(user)
+	dto := modelToRes(user)
 	if err != nil {
 		return dto, checkError(err)
 	}
 	return dto, nil
 }
 
-func (s *service) createUser(dto userDto) (userDto, error) {
-	arg := CreateUserParams(createDtoToModel(dto))
-	user, err := s.db.CreateUser(context.Background(), arg)
-	dtoRes := modelToDto(user)
+func (s *service) createUser(req JSONUser) error {
+	arg := CreateUserParams(reqToModel(req))
+	err := s.db.CreateUser(context.Background(), arg)
 	if err != nil {
-		return dtoRes, checkError(err)
+		return checkError(err)
 	}
-	return dtoRes, nil
+	return nil
 }
 
-func (s *service) updateUser(dto userDto) (userDto, error) {
-	m := createDtoToModel(dto)
+func (s *service) updateUser(req JSONUser) error {
+	m := reqToModel(req)
 	arg := UpdateUserParams{m.Name, m.Email, m.Phone, m.Age, m.Address, m.ID}
-	user, err := s.db.UpdateUser(context.Background(), arg)
-	dtoRes := modelToDto(user)
+	err := s.db.UpdateUser(context.Background(), arg)
 	if err != nil {
-		return dtoRes, checkError(err)
+		return checkError(err)
 	}
-	return dtoRes, nil
+	return nil
 }
 
 func (s *service) deleteUser(id int32) error {
 	err := s.db.DeleteUser(context.Background(), id)
+	if err != nil {
+		return checkError(err)
+	}
+	return nil
+}
+
+func (s *service) UserExists(name, password string) error {
+	arg := UserExistsParams{name, password}
+	_, err := s.db.UserExists(context.Background(), arg)
 	if err != nil {
 		return checkError(err)
 	}

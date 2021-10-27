@@ -25,18 +25,20 @@ func checkError(err error) error {
 		ce.Err = errors.New("duplicate user id")
 		ce.Code = 400
 	default:
-		ce.Err = errors.New("database error")
+		ce.Err = fmt.Errorf("database error %w", err)
 		ce.Code = 500
 	}
 	return &ce
 }
 
-func validate(u userDto) error {
-	if u.ID <= 0 {
+func validate(user JSONUser) error {
+	if user.ID <= 0 {
 		return &customErr{errors.New("missing id"), 400}
-	} else if u.Name == "" {
+	} else if user.Name == "" {
 		return &customErr{errors.New("missing name"), 400}
-	} else if u.Email == "" {
+	} else if user.Password == "" {
+		return &customErr{errors.New("missing password"), 400}
+	} else if user.Email == "" {
 		return &customErr{errors.New("missing email"), 400}
 	}
 	return nil
