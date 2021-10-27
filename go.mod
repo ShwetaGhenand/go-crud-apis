@@ -21,6 +21,7 @@ require (
 	github.com/jackc/pgtype v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
+	github.com/sebnyberg/flagtags v0.0.0-20210812191134-9825f4cda663 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/text v0.3.7 // indirect

@@ -6,25 +6,29 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/sebnyberg/flagtags"
 	"github.com/urfave/cli/v2"
 )
 
 // server declartion
 type server struct {
-	router   *mux.Router
-	userRepo *userRepository
+	router  *mux.Router
+	service *service
 }
 
-func newServer(url string) *server {
-	db := initDB(url)
+func newServer(conf DBConfig) *server {
+	db, err := initDB(conf)
+	if err != nil {
+		log.Fatalf("Database Error %v", err)
+	}
 	s := &server{
-		router:   mux.NewRouter(),
-		userRepo: &userRepository{db: db},
+		router:  mux.NewRouter(),
+		service: &service{db: db},
 	}
 	s.router.HandleFunc("/health", getHealth).Methods("GET")
 	sr := s.router.PathPrefix("/users").Subrouter()
-	sr.HandleFunc("", s.addUser).Methods("POST")
-	sr.HandleFunc("", s.getUsers).Methods("GET")
+	sr.HandleFunc("", s.createUser).Methods("POST")
+	sr.HandleFunc("", s.listUsers).Methods("GET")
 	sr.HandleFunc("/{id}", s.getUser).Methods("GET")
 	sr.HandleFunc("/{id}", s.updateUser).Methods("PUT")
 	sr.HandleFunc("/{id}", s.deleteUser).Methods("DELETE")
@@ -38,28 +42,15 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Cmd : command to start the server
 func Cmd() *cli.Command {
-	var port int
-	var url string
+	var conf Config
 	return &cli.Command{
 		Name:  "server",
 		Usage: "users rest apis",
-		Flags: []cli.Flag{
-			&cli.IntFlag{
-				Name:        "port",
-				Value:       8081,
-				Usage:       "port to listen server",
-				Destination: &port,
-			},
-			&cli.StringFlag{
-				Name:        "url",
-				EnvVars:     []string{"DATABASE_URL"},
-				Destination: &url,
-			},
-		},
+		Flags: flagtags.MustParseFlags(&conf),
 		Action: func(c *cli.Context) error {
-			s := newServer(url)
-			log.Println("Server is listening on port : ", port)
-			if err := http.ListenAndServe(fmt.Sprintf(":%d", port), s); err != nil {
+			s := newServer(conf.DBConfig)
+			log.Println("Server is listening on port : ", conf.Port)
+			if err := http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), s); err != nil {
 				log.Fatalln(err)
 			}
 			return nil
