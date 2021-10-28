@@ -1,7 +1,7 @@
 package server
 
 import (
-	"io/ioutil"
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -37,13 +37,9 @@ func initDB(c DBConfig) (*Queries, error) {
 		return nil, err
 	}
 	conn := stdlib.OpenDB(*cfg)
-	content, err := ioutil.ReadFile("schema.sql")
+	err = validateSchema(conn)
 	if err != nil {
-		return nil, err
-	}
-	query := string(content)
-	if _, err := conn.Exec(query); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validating schema: %w", err)
 	}
 	db := New(conn)
 	return db, nil
