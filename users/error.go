@@ -1,4 +1,4 @@
-package server
+package user
 
 import (
 	"errors"
@@ -6,17 +6,17 @@ import (
 	"strings"
 )
 
-type customErr struct {
+type CustomErr struct {
 	Err  error
 	Code int
 }
 
-func (e *customErr) Error() string {
+func (e *CustomErr) Error() string {
 	return fmt.Sprintf("%s,%d", e.Err.Error(), e.Code)
 }
 
-func checkError(err error) error {
-	ce := customErr{}
+func CheckError(err error) error {
+	ce := CustomErr{}
 	switch e := err.Error(); {
 	case strings.Contains(e, "no rows"):
 		ce.Err = errors.New("user not found")
@@ -31,15 +31,15 @@ func checkError(err error) error {
 	return &ce
 }
 
-func validate(u JSONUser) error {
+func Validate(u JSONUser) error {
 	if u.ID <= 0 {
-		return &customErr{errors.New("missing id"), 400}
+		return &CustomErr{errors.New("missing id"), 400}
 	} else if u.Name == "" {
-		return &customErr{errors.New("missing name"), 400}
+		return &CustomErr{errors.New("missing name"), 400}
 	} else if u.Password == "" {
-		return &customErr{errors.New("missing password"), 400}
+		return &CustomErr{errors.New("missing password"), 400}
 	} else if u.Email == "" {
-		return &customErr{errors.New("missing email"), 400}
+		return &CustomErr{errors.New("missing email"), 400}
 	}
 	return nil
 }

@@ -1,10 +1,11 @@
-package server
+package config
 
 import (
 	"io/ioutil"
 	"net/url"
 	"strconv"
 
+	db "github.com/go-crud-apis/users/sql/dbgen"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/stdlib"
 )
@@ -31,13 +32,13 @@ func (c *DBConfig) url() string {
 	return u.String()
 }
 
-func initDB(c DBConfig) (*Queries, error) {
+func InitDB(c DBConfig) (*db.Queries, error) {
 	cfg, err := pgx.ParseConfig(c.url())
 	if err != nil {
 		return nil, err
 	}
 	conn := stdlib.OpenDB(*cfg)
-	content, err := ioutil.ReadFile("schema.sql")
+	content, err := ioutil.ReadFile("../sql/schema.sql")
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +46,5 @@ func initDB(c DBConfig) (*Queries, error) {
 	if _, err := conn.Exec(query); err != nil {
 		return nil, err
 	}
-	db := New(conn)
-	return db, nil
+	return db.New(conn), nil
 }

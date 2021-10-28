@@ -1,17 +1,19 @@
-package server
+package user
 
 import (
 	"context"
 	"database/sql"
 	"errors"
+
+	db "github.com/go-crud-apis/users/sql/dbgen"
 )
 
-type service struct {
-	db *Queries
+type Service struct {
+	DB *db.Queries
 }
 
-func reqToModel(req JSONUser) User {
-	m := User{}
+func reqToModel(req JSONUser) db.User {
+	m := db.User{}
 	m.ID = int32(req.ID)
 	m.Name = req.Name
 	m.Password = req.Password
@@ -34,7 +36,7 @@ func reqToModel(req JSONUser) User {
 	return m
 }
 
-func modelToRes(user User) JSONUser {
+func modelToRes(user db.User) JSONUser {
 	res := JSONUser{}
 	if user.ID != 0 {
 		res.ID = int(user.ID)
@@ -60,13 +62,13 @@ func modelToRes(user User) JSONUser {
 	return res
 }
 
-func (s *service) listUsers() ([]JSONUser, error) {
-	users, err := s.db.ListUsers(context.Background())
+func (s *Service) ListUsers() ([]JSONUser, error) {
+	users, err := s.DB.ListUsers(context.Background())
 	if err != nil {
-		return nil, checkError(err)
+		return nil, CheckError(err)
 	}
 	if len(users) == 0 {
-		return nil, &customErr{errors.New("users not found"), 404}
+		return nil, &CustomErr{errors.New("users not found"), 404}
 	}
 	var res []JSONUser
 	for _, user := range users {
@@ -75,47 +77,48 @@ func (s *service) listUsers() ([]JSONUser, error) {
 	return res, nil
 }
 
-func (s *service) getUser(id int32) (JSONUser, error) {
-	user, err := s.db.GetUser(context.Background(), id)
+func (s *Service) GetUser(id int32) (JSONUser, error) {
+	user, err := s.DB.GetUser(context.Background(), id)
 	dto := modelToRes(user)
 	if err != nil {
-		return dto, checkError(err)
+		return dto, CheckError(err)
 	}
 	return dto, nil
 }
 
-func (s *service) createUser(req JSONUser) error {
-	arg := CreateUserParams(reqToModel(req))
-	err := s.db.CreateUser(context.Background(), arg)
+func (s *Service) CreateUser(req JSONUser) error {
+	arg := db.CreateUserParams(reqToModel(req))
+	err := s.DB.CreateUser(context.Background(), arg)
 	if err != nil {
-		return checkError(err)
+		return CheckError(err)
 	}
 	return nil
 }
 
-func (s *service) updateUser(req JSONUser) error {
+func (s *Service) UpdateUser(req JSONUser) error {
 	m := reqToModel(req)
-	arg := UpdateUserParams{m.Name, m.Email, m.Phone, m.Age, m.Address, m.ID}
-	err := s.db.UpdateUser(context.Background(), arg)
+	arg := db.UpdateUserParams{Name: m.Name, Email: m.Email, Phone: m.Phone,
+		Age: m.Age, Address: m.Address, ID: m.ID}
+	err := s.DB.UpdateUser(context.Background(), arg)
 	if err != nil {
-		return checkError(err)
+		return CheckError(err)
 	}
 	return nil
 }
 
-func (s *service) deleteUser(id int32) error {
-	err := s.db.DeleteUser(context.Background(), id)
+func (s *Service) DeleteUser(id int32) error {
+	err := s.DB.DeleteUser(context.Background(), id)
 	if err != nil {
-		return checkError(err)
+		return CheckError(err)
 	}
 	return nil
 }
 
-func (s *service) UserExists(n, p string) error {
-	arg := UserExistsParams{n, p}
-	_, err := s.db.UserExists(context.Background(), arg)
+func (s *Service) UserExists(n, p string) error {
+	arg := db.UserExistsParams{Name: n, Password: p}
+	_, err := s.DB.UserExists(context.Background(), arg)
 	if err != nil {
-		return checkError(err)
+		return CheckError(err)
 	}
 	return nil
 }

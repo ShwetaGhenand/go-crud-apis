@@ -1,4 +1,4 @@
-package server
+package auth
 
 import (
 	"log"
@@ -45,7 +45,7 @@ func ParseJWTToken(tokenStr, secret string) (*JWTToken, error) {
 	return &JWTToken{token: &token}, nil
 }
 
-func authMiddleware(secret string) mux.MiddlewareFunc {
+func JWTMiddleware(secret string) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			authorizationHeader := req.Header.Get("authorization")

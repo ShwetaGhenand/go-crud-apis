@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	u "github.com/go-crud-apis/users"
+	"github.com/go-crud-apis/users/auth"
+	c "github.com/go-crud-apis/users/config"
 	"github.com/gorilla/mux"
 	"github.com/sebnyberg/flagtags"
 	"github.com/urfave/cli/v2"
@@ -13,18 +16,18 @@ import (
 // server declartion
 type server struct {
 	router  *mux.Router
-	service *service
+	service *u.Service
 	secret  string
 }
 
-func newServer(conf Config) *server {
-	db, err := initDB(conf.DBConfig)
+func newServer(conf c.Config) *server {
+	db, err := c.InitDB(conf.DBConfig)
 	if err != nil {
 		log.Fatalf("Database Error %v", err)
 	}
 	s := &server{
 		router:  mux.NewRouter(),
-		service: &service{db: db},
+		service: &u.Service{DB: db},
 		secret:  conf.Secret,
 	}
 	s.router.HandleFunc("/health", getHealth).Methods("GET")
@@ -32,7 +35,7 @@ func newServer(conf Config) *server {
 	s.router.HandleFunc("/login", s.loginUser).Methods("POST")
 
 	sr := s.router.PathPrefix("/users").Subrouter()
-	sr.Use(authMiddleware(conf.Secret))
+	sr.Use(auth.JWTMiddleware(conf.Secret))
 	sr.HandleFunc("", s.listUsers).Methods("GET")
 	sr.HandleFunc("/{id}", s.getUser).Methods("GET")
 	sr.HandleFunc("/{id}", s.updateUser).Methods("PUT")
@@ -47,7 +50,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Cmd : command to start the server
 func Cmd() *cli.Command {
-	var conf Config
+	var conf c.Config
 	return &cli.Command{
 		Name:  "server",
 		Usage: "users rest apis",

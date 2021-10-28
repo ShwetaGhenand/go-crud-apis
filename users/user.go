@@ -1,4 +1,4 @@
-package server
+package user
 
 type JSONUser struct {
 	ID       int    `json:"id"`

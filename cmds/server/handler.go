@@ -7,13 +7,15 @@ import (
 	"strconv"
 	"strings"
 
+	user "github.com/go-crud-apis/users"
+	"github.com/go-crud-apis/users/auth"
 	"github.com/gorilla/mux"
 )
 
 func writeError(w http.ResponseWriter, err error) {
 	log.Printf("Error occurred : %v", err)
 	switch err.(type) {
-	case *customErr:
+	case *user.CustomErr:
 		s := strings.Split(err.Error(), ",")
 		message := s[0]
 		code, e := strconv.Atoi(s[1])
@@ -59,7 +61,7 @@ func (s *server) loginUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	t, err := NewJWTToken(req.Name, s.secret)
+	t, err := auth.NewJWTToken(req.Name, s.secret)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -74,7 +76,7 @@ func (s *server) loginUser(w http.ResponseWriter, r *http.Request) {
 // listUsers : returns list of users
 func (s *server) listUsers(w http.ResponseWriter, r *http.Request) {
 	log.Println("Get all users endpoint called.")
-	dtos, err := s.service.listUsers()
+	dtos, err := s.service.ListUsers()
 	if err != nil {
 		writeError(w, err)
 		return
@@ -91,7 +93,7 @@ func (s *server) listUsers(w http.ResponseWriter, r *http.Request) {
 func (s *server) getUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Get single user endpoint called.")
 	id, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 32)
-	dto, err := s.service.getUser(int32(id))
+	dto, err := s.service.GetUser(int32(id))
 	if err != nil {
 		writeError(w, err)
 		return
@@ -112,16 +114,16 @@ func (s *server) getUser(w http.ResponseWriter, r *http.Request) {
 // addUser : add single user
 func (s *server) createUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Add user endpoint called.")
-	req := JSONUser{}
+	req := user.JSONUser{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, err)
 		return
 	}
-	if err := validate(req); err != nil {
+	if err := user.Validate(req); err != nil {
 		writeError(w, err)
 		return
 	}
-	err := s.service.createUser(req)
+	err := s.service.CreateUser(req)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -144,13 +146,13 @@ func (s *server) updateUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Update user endpoint called.")
 	id, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 32)
 
-	req := JSONUser{}
+	req := user.JSONUser{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, err)
 		return
 	}
 	req.ID = int(id)
-	err := s.service.updateUser(req)
+	err := s.service.UpdateUser(req)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -172,7 +174,7 @@ func (s *server) updateUser(w http.ResponseWriter, r *http.Request) {
 func (s *server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Delete user endpoint called.")
 	id, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 32)
-	if err := s.service.deleteUser(int32(id)); err != nil {
+	if err := s.service.DeleteUser(int32(id)); err != nil {
 		writeError(w, err)
 		return
 	}
