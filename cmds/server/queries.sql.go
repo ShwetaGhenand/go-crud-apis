@@ -8,13 +8,12 @@ import (
 	"database/sql"
 )
 
-const createUser = `-- name: CreateUser :one
+const createUser = `-- name: CreateUser :exec
 INSERT INTO users (
   id, name, password, email, phone, age, address
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, name, password, email, phone, age, address
 `
 
 type CreateUserParams struct {
@@ -27,8 +26,8 @@ type CreateUserParams struct {
 	Address  sql.NullString `json:"address"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
+	_, err := q.db.ExecContext(ctx, createUser,
 		arg.ID,
 		arg.Name,
 		arg.Password,
@@ -37,17 +36,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Age,
 		arg.Address,
 	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Password,
-		&i.Email,
-		&i.Phone,
-		&i.Age,
-		&i.Address,
-	)
-	return i, err
+	return err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -116,7 +105,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const updateUser = `-- name: UpdateUser :one
+const updateUser = `-- name: UpdateUser :exec
 UPDATE users SET
     name = $1,
 	email = $2,
@@ -124,7 +113,6 @@ UPDATE users SET
 	age = $4,
 	address = $5
 	WHERE id = $6
-RETURNING id, name, password, email, phone, age, address
 `
 
 type UpdateUserParams struct {
@@ -136,8 +124,8 @@ type UpdateUserParams struct {
 	ID      int32          `json:"id"`
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUser,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser,
 		arg.Name,
 		arg.Email,
 		arg.Phone,
@@ -145,17 +133,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Address,
 		arg.ID,
 	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Password,
-		&i.Email,
-		&i.Phone,
-		&i.Age,
-		&i.Address,
-	)
-	return i, err
+	return err
 }
 
 const userExists = `-- name: UserExists :one

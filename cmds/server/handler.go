@@ -37,25 +37,34 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//loginUser : verify user details and generate jwt token
+type loginUserRequest struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+type loginUserResponse struct {
+	Token string `json:"token"`
+}
+
+// loginUser : verify user details and generate jwt token
 func (s *server) loginUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Login user endpoint called.")
-	c := loginDto{}
-	_ = json.NewDecoder(r.Body).Decode(&c)
-	if c.Name == "" || c.Password == "" {
+	req := loginUserRequest{}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	if req.Name == "" || req.Password == "" {
 		http.Error(w, "invalid login details", 400)
 		return
 	}
-	if err := s.service.UserExists(c.Name, c.Password); err != nil {
+	if err := s.service.UserExists(req.Name, req.Password); err != nil {
 		writeError(w, err)
 		return
 	}
-	t, err := generateToken(c)
+	t, err := NewJWTToken(req.Name, s.secret)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	if err := json.NewEncoder(w).Encode(tokenDto{Token: t}); err != nil {
+	if err := json.NewEncoder(w).Encode(loginUserResponse{Token: t}); err != nil {
 		writeError(w, err)
 		return
 	}
@@ -103,21 +112,21 @@ func (s *server) getUser(w http.ResponseWriter, r *http.Request) {
 // addUser : add single user
 func (s *server) createUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Add user endpoint called.")
-	dtoReq := userDto{}
-	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
+	req := JSONUser{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, err)
 		return
 	}
-	if err := validate(dtoReq); err != nil {
+	if err := validate(req); err != nil {
 		writeError(w, err)
 		return
 	}
-	dtoRes, err := s.service.createUser(dtoReq)
+	err := s.service.createUser(req)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	res, err := json.Marshal(dtoRes)
+	res, err := json.Marshal(req)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -135,18 +144,18 @@ func (s *server) updateUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Update user endpoint called.")
 	id, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 32)
 
-	dtoReq := userDto{}
-	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
+	req := JSONUser{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, err)
 		return
 	}
-	dtoReq.ID = int(id)
-	user, err := s.service.updateUser(dtoReq)
+	req.ID = int(id)
+	err := s.service.updateUser(req)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	dtoRes, err := json.Marshal(user)
+	dtoRes, err := json.Marshal(req)
 	if err != nil {
 		writeError(w, err)
 		return

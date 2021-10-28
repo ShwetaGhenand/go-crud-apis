@@ -1,55 +1,63 @@
 package server
 
 import (
-	"errors"
+	"log"
 	"net/http"
-	"os"
 	"strings"
-	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
-func generateToken(c loginDto) (string, error) {
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"name": c.Name,
-		"exp":  time.Now().Add(time.Minute * 15).Unix(),
-	})
-	var tokenString string
-	secret := os.Getenv("SECRET")
-	tokenString, err := t.SignedString([]byte(secret))
-	if err != nil {
-		return tokenString, &customErr{Err: errors.New("Error generating signing token"), Code: 500}
-	}
-	return tokenString, nil
+type JWTToken struct {
+	token *jwt.Token
 }
 
-func authMiddleware() mux.MiddlewareFunc {
+type JWTSign struct {
+	Key       interface{}
+	Algorithm jwa.SignatureAlgorithm
+}
+
+func NewJWTToken(name, secret string) (string, error) {
+	var tokenStr string
+	js := &JWTSign{Key: []byte(secret), Algorithm: jwa.HS256}
+	token := jwt.New()
+	if err := token.Set(`name`, name); err != nil {
+		return tokenStr, err
+	}
+	payload, err := jwt.Sign(token, js.Algorithm, js.Key)
+	if err != nil {
+		return tokenStr, err
+	}
+	tokenStr = string(payload)
+	return tokenStr, nil
+}
+
+func ParseJWTToken(tokenStr, secret string) (*JWTToken, error) {
+	token, err := jwt.Parse(
+		[]byte(tokenStr),
+		jwt.WithValidate(true),
+		jwt.WithVerify(jwa.HS256, []byte(secret)))
+	if err != nil {
+		return nil, err
+	}
+	return &JWTToken{token: &token}, nil
+}
+
+func authMiddleware(secret string) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			authorizationHeader := req.Header.Get("authorization")
-			secret := os.Getenv("SECRET")
-			if authorizationHeader != "" {
-				bearerToken := strings.Split(authorizationHeader, " ")
-				if len(bearerToken) == 2 {
-					token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
-						if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-							return nil, errors.New("error signing token method")
-						}
-						return []byte(secret), nil
-					})
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusUnauthorized)
-						return
-					}
-					if !token.Valid {
-						http.Error(w, "invalid authorization token", http.StatusUnauthorized)
-						return
-					}
-				}
-			} else {
-				http.Error(w, "authorization header is required", http.StatusUnauthorized)
+			bearerToken := strings.Split(authorizationHeader, " ")
+			if len(bearerToken) != 2 {
+				log.Println("missing authorization token")
+				http.Error(w, "access denied", http.StatusForbidden)
+				return
+			}
+			if _, err := ParseJWTToken(bearerToken[1], secret); err != nil {
+				log.Printf("error parsing authorization token %v", err)
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
 			h.ServeHTTP(w, req)

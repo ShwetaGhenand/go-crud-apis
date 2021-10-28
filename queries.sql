@@ -10,23 +10,21 @@ WHERE id = $1 LIMIT 1;
 SELECT * FROM users
 ORDER BY name;
 
--- name: CreateUser :one
+-- name: CreateUser :exec
 INSERT INTO users (
   id, name, password, email, phone, age, address
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
-)
-RETURNING *;
+);
 
--- name: UpdateUser :one
+-- name: UpdateUser :exec
 UPDATE users SET
     name = $1,
 	email = $2,
 	phone = $3,
 	age = $4,
 	address = $5
-	WHERE id = $6
-RETURNING *;
+	WHERE id = $6;
 
 -- name: DeleteUser :exec
 DELETE FROM users

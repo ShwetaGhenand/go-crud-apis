@@ -14,23 +14,25 @@ import (
 type server struct {
 	router  *mux.Router
 	service *service
+	secret  string
 }
 
-func newServer(conf DBConfig) *server {
-	db, err := initDB(conf)
+func newServer(conf Config) *server {
+	db, err := initDB(conf.DBConfig)
 	if err != nil {
 		log.Fatalf("Database Error %v", err)
 	}
 	s := &server{
 		router:  mux.NewRouter(),
 		service: &service{db: db},
+		secret:  conf.Secret,
 	}
 	s.router.HandleFunc("/health", getHealth).Methods("GET")
 	s.router.HandleFunc("/signin", s.createUser).Methods("POST")
 	s.router.HandleFunc("/login", s.loginUser).Methods("POST")
 
 	sr := s.router.PathPrefix("/users").Subrouter()
-	sr.Use(authMiddleware())
+	sr.Use(authMiddleware(conf.Secret))
 	sr.HandleFunc("", s.listUsers).Methods("GET")
 	sr.HandleFunc("/{id}", s.getUser).Methods("GET")
 	sr.HandleFunc("/{id}", s.updateUser).Methods("PUT")
@@ -51,7 +53,7 @@ func Cmd() *cli.Command {
 		Usage: "users rest apis",
 		Flags: flagtags.MustParseFlags(&conf),
 		Action: func(c *cli.Context) error {
-			s := newServer(conf.DBConfig)
+			s := newServer(conf)
 			log.Println("Server is listening on port : ", conf.Port)
 			if err := http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), s); err != nil {
 				log.Fatalln(err)
