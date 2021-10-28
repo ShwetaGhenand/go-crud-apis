@@ -27,7 +27,7 @@ func newServer(conf c.Config) *server {
 	}
 	s := &server{
 		router:  mux.NewRouter(),
-		service: &u.Service{DB: db},
+		service: u.NewService(db),
 		secret:  conf.Secret,
 	}
 	s.router.HandleFunc("/health", getHealth).Methods("GET")

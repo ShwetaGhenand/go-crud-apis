@@ -15,18 +15,18 @@ type JWTToken struct {
 }
 
 type JWTSign struct {
-	Key       interface{}
-	Algorithm jwa.SignatureAlgorithm
+	key       interface{}
+	algorithm jwa.SignatureAlgorithm
 }
 
 func NewJWTToken(name, secret string) (string, error) {
 	var tokenStr string
-	js := &JWTSign{Key: []byte(secret), Algorithm: jwa.HS256}
+	js := &JWTSign{key: []byte(secret), algorithm: jwa.HS256}
 	token := jwt.New()
 	if err := token.Set(`name`, name); err != nil {
 		return tokenStr, err
 	}
-	payload, err := jwt.Sign(token, js.Algorithm, js.Key)
+	payload, err := jwt.Sign(token, js.algorithm, js.key)
 	if err != nil {
 		return tokenStr, err
 	}

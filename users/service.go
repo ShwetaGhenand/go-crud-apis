@@ -9,7 +9,11 @@ import (
 )
 
 type Service struct {
-	DB *db.Queries
+	db *db.Queries
+}
+
+func NewService(db *db.Queries) *Service {
+	return &Service{db: db}
 }
 
 func reqToModel(req JSONUser) db.User {
@@ -63,7 +67,7 @@ func modelToRes(user db.User) JSONUser {
 }
 
 func (s *Service) ListUsers() ([]JSONUser, error) {
-	users, err := s.DB.ListUsers(context.Background())
+	users, err := s.db.ListUsers(context.Background())
 	if err != nil {
 		return nil, CheckError(err)
 	}
@@ -78,7 +82,7 @@ func (s *Service) ListUsers() ([]JSONUser, error) {
 }
 
 func (s *Service) GetUser(id int32) (JSONUser, error) {
-	user, err := s.DB.GetUser(context.Background(), id)
+	user, err := s.db.GetUser(context.Background(), id)
 	dto := modelToRes(user)
 	if err != nil {
 		return dto, CheckError(err)
@@ -88,7 +92,7 @@ func (s *Service) GetUser(id int32) (JSONUser, error) {
 
 func (s *Service) CreateUser(req JSONUser) error {
 	arg := db.CreateUserParams(reqToModel(req))
-	err := s.DB.CreateUser(context.Background(), arg)
+	err := s.db.CreateUser(context.Background(), arg)
 	if err != nil {
 		return CheckError(err)
 	}
@@ -99,7 +103,7 @@ func (s *Service) UpdateUser(req JSONUser) error {
 	m := reqToModel(req)
 	arg := db.UpdateUserParams{Name: m.Name, Email: m.Email, Phone: m.Phone,
 		Age: m.Age, Address: m.Address, ID: m.ID}
-	err := s.DB.UpdateUser(context.Background(), arg)
+	err := s.db.UpdateUser(context.Background(), arg)
 	if err != nil {
 		return CheckError(err)
 	}
@@ -107,7 +111,7 @@ func (s *Service) UpdateUser(req JSONUser) error {
 }
 
 func (s *Service) DeleteUser(id int32) error {
-	err := s.DB.DeleteUser(context.Background(), id)
+	err := s.db.DeleteUser(context.Background(), id)
 	if err != nil {
 		return CheckError(err)
 	}
@@ -116,7 +120,7 @@ func (s *Service) DeleteUser(id int32) error {
 
 func (s *Service) UserExists(n, p string) error {
 	arg := db.UserExistsParams{Name: n, Password: p}
-	_, err := s.DB.UserExists(context.Background(), arg)
+	_, err := s.db.UserExists(context.Background(), arg)
 	if err != nil {
 		return CheckError(err)
 	}
