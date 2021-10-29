@@ -1,4 +1,4 @@
-package user
+package users
 
 import (
 	"errors"
@@ -31,7 +31,7 @@ func CheckError(err error) error {
 	return &ce
 }
 
-func Validate(u JSONUser) error {
+func Validate(u User) error {
 	if u.ID <= 0 {
 		return &CustomErr{errors.New("missing id"), 400}
 	} else if u.Name == "" {

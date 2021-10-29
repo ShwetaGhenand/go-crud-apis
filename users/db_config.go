@@ -1,4 +1,4 @@
-package config
+package users
 
 import (
 	"io/ioutil"

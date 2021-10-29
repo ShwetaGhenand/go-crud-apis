@@ -7,15 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	user "github.com/go-crud-apis/users"
-	"github.com/go-crud-apis/users/auth"
+	users "github.com/go-crud-apis/users"
 	"github.com/gorilla/mux"
 )
 
 func writeError(w http.ResponseWriter, err error) {
 	log.Printf("Error occurred : %v", err)
 	switch err.(type) {
-	case *user.CustomErr:
+	case *users.CustomErr:
 		s := strings.Split(err.Error(), ",")
 		message := s[0]
 		code, e := strconv.Atoi(s[1])
@@ -61,7 +60,7 @@ func (s *server) loginUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	t, err := auth.NewJWTToken(req.Name, s.secret)
+	t, err := users.NewJWTToken(req.Name, s.secret)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -114,12 +113,12 @@ func (s *server) getUser(w http.ResponseWriter, r *http.Request) {
 // addUser : add single user
 func (s *server) createUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Add user endpoint called.")
-	req := user.JSONUser{}
+	req := users.User{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, err)
 		return
 	}
-	if err := user.Validate(req); err != nil {
+	if err := users.Validate(req); err != nil {
 		writeError(w, err)
 		return
 	}
@@ -146,7 +145,7 @@ func (s *server) updateUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Update user endpoint called.")
 	id, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 32)
 
-	req := user.JSONUser{}
+	req := users.User{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, err)
 		return

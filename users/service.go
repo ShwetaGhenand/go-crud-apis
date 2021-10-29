@@ -1,4 +1,4 @@
-package user
+package users
 
 import (
 	"context"
@@ -12,11 +12,11 @@ type Service struct {
 	db *db.Queries
 }
 
-func NewService(db *db.Queries) *Service {
-	return &Service{db: db}
+func NewService(q *db.Queries) *Service {
+	return &Service{db: q}
 }
 
-func reqToModel(req JSONUser) db.User {
+func reqToModel(req User) db.User {
 	m := db.User{}
 	m.ID = int32(req.ID)
 	m.Name = req.Name
@@ -40,8 +40,8 @@ func reqToModel(req JSONUser) db.User {
 	return m
 }
 
-func modelToRes(user db.User) JSONUser {
-	res := JSONUser{}
+func modelToRes(user db.User) User {
+	res := User{}
 	if user.ID != 0 {
 		res.ID = int(user.ID)
 	}
@@ -66,7 +66,7 @@ func modelToRes(user db.User) JSONUser {
 	return res
 }
 
-func (s *Service) ListUsers() ([]JSONUser, error) {
+func (s *Service) ListUsers() ([]User, error) {
 	users, err := s.db.ListUsers(context.Background())
 	if err != nil {
 		return nil, CheckError(err)
@@ -74,14 +74,14 @@ func (s *Service) ListUsers() ([]JSONUser, error) {
 	if len(users) == 0 {
 		return nil, &CustomErr{errors.New("users not found"), 404}
 	}
-	var res []JSONUser
+	var res []User
 	for _, user := range users {
 		res = append(res, modelToRes(user))
 	}
 	return res, nil
 }
 
-func (s *Service) GetUser(id int32) (JSONUser, error) {
+func (s *Service) GetUser(id int32) (User, error) {
 	user, err := s.db.GetUser(context.Background(), id)
 	dto := modelToRes(user)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *Service) GetUser(id int32) (JSONUser, error) {
 	return dto, nil
 }
 
-func (s *Service) CreateUser(req JSONUser) error {
+func (s *Service) CreateUser(req User) error {
 	arg := db.CreateUserParams(reqToModel(req))
 	err := s.db.CreateUser(context.Background(), arg)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *Service) CreateUser(req JSONUser) error {
 	return nil
 }
 
-func (s *Service) UpdateUser(req JSONUser) error {
+func (s *Service) UpdateUser(req User) error {
 	m := reqToModel(req)
 	arg := db.UpdateUserParams{Name: m.Name, Email: m.Email, Phone: m.Phone,
 		Age: m.Age, Address: m.Address, ID: m.ID}

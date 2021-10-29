@@ -1,4 +1,4 @@
-package config
+package users
 
 type Config struct {
 	Port int
