@@ -1,0 +1,7 @@
+version: "1"
+packages: 
+  - name: "dbgen"
+    path: "users/sql/dbgen"
+    emit_json_tags: true
+    schema: "users/sql/schema.sql"
+    queries: "users/sql/queries/queries.sql" 
