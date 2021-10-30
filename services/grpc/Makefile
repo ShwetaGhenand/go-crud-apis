@@ -45,3 +45,7 @@ postgres-down:
 .PHONY: test
 test:
 	go test users/endpoint_test.go
+
+.PHONY: buf-generate
+buf-generate:
+	buf generate

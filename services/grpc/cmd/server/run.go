@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	userspb "github.com/go-crud-apis/services/grpc/proto/gen"
+	userspb "github.com/go-crud-apis/services/grpc/gen/proto"
 	users "github.com/go-crud-apis/services/grpc/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

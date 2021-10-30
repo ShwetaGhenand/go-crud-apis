@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	pb "github.com/go-crud-apis/services/grpc/proto/gen"
+	pb "github.com/go-crud-apis/services/grpc/gen/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

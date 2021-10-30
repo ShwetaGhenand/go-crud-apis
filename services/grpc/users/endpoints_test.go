@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-crud-apis/services/grpc/cmd/server"
-	userspb "github.com/go-crud-apis/services/grpc/proto/gen"
+	userspb "github.com/go-crud-apis/services/grpc/gen/proto"
 	users "github.com/go-crud-apis/services/grpc/users"
 	"github.com/go-crud-apis/services/grpc/users/sql/dbgen"
 	"github.com/stretchr/testify/require"

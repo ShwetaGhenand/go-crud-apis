@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"log"
 
-	pb "github.com/go-crud-apis/services/grpc/proto/gen"
+	pb "github.com/go-crud-apis/services/grpc/gen/proto"
 	"github.com/go-crud-apis/services/grpc/users/sql/dbgen"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
