@@ -1,9 +1,10 @@
 
-CREATE TABLE  IF NOT EXISTS Users(
-   ID INT PRIMARY KEY     NOT NULL,
-   NAME           TEXT    NOT NULL,
-   EMAIL          TEXT    NOT NULL,
-   PHONE          TEXT,
-   AGE            INT,
-   ADDRESS        TEXT 
+CREATE TABLE  IF NOT EXISTS users(
+   id             INT     PRIMARY KEY     NOT NULL,
+   name           TEXT                    NOT NULL,
+   password       TEXT                    NOT NULL,
+   email          TEXT                    NOT NULL,
+   phone          TEXT,
+   age            INT,
+   address        TEXT 
 );

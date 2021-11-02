@@ -8,43 +8,35 @@ import (
 	"database/sql"
 )
 
-const createUser = `-- name: CreateUser :one
+const createUser = `-- name: CreateUser :exec
 INSERT INTO users (
-  id, name, email, phone, age, address
+  id, name, password, email, phone, age, address
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, name, email, phone, age, address
 `
 
 type CreateUserParams struct {
-	ID      int32          `json:"id"`
-	Name    string         `json:"name"`
-	Email   string         `json:"email"`
-	Phone   sql.NullString `json:"phone"`
-	Age     sql.NullInt32  `json:"age"`
-	Address sql.NullString `json:"address"`
+	ID       int32          `json:"id"`
+	Name     string         `json:"name"`
+	Password string         `json:"password"`
+	Email    string         `json:"email"`
+	Phone    sql.NullString `json:"phone"`
+	Age      sql.NullInt32  `json:"age"`
+	Address  sql.NullString `json:"address"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
+	_, err := q.db.ExecContext(ctx, createUser,
 		arg.ID,
 		arg.Name,
+		arg.Password,
 		arg.Email,
 		arg.Phone,
 		arg.Age,
 		arg.Address,
 	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Email,
-		&i.Phone,
-		&i.Age,
-		&i.Address,
-	)
-	return i, err
+	return err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -58,7 +50,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, email, phone, age, address FROM users
+SELECT id, name, password, email, phone, age, address FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -68,6 +60,7 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Password,
 		&i.Email,
 		&i.Phone,
 		&i.Age,
@@ -77,7 +70,7 @@ func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, name, email, phone, age, address FROM users
+SELECT id, name, password, email, phone, age, address FROM users
 ORDER BY name
 `
 
@@ -93,6 +86,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Password,
 			&i.Email,
 			&i.Phone,
 			&i.Age,
@@ -111,7 +105,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const updateUser = `-- name: UpdateUser :one
+const updateUser = `-- name: UpdateUser :exec
 UPDATE users SET
     name = $1,
 	email = $2,
@@ -119,7 +113,6 @@ UPDATE users SET
 	age = $4,
 	address = $5
 	WHERE id = $6
-RETURNING id, name, email, phone, age, address
 `
 
 type UpdateUserParams struct {
@@ -131,8 +124,8 @@ type UpdateUserParams struct {
 	ID      int32          `json:"id"`
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUser,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser,
 		arg.Name,
 		arg.Email,
 		arg.Phone,
@@ -140,10 +133,26 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Address,
 		arg.ID,
 	)
+	return err
+}
+
+const userExists = `-- name: UserExists :one
+SELECT id, name, password, email, phone, age, address FROM users
+WHERE name = $1 and password = $2
+`
+
+type UserExistsParams struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+func (q *Queries) UserExists(ctx context.Context, arg UserExistsParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, userExists, arg.Name, arg.Password)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Password,
 		&i.Email,
 		&i.Phone,
 		&i.Age,
