@@ -1,0 +1,67 @@
+syntax="proto3";
+
+package users;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+option go_package = ".; users";
+
+service UserService {
+    rpc CreateUser(User) returns (User) {
+        option (google.api.http) = {
+            post: "/v1/users"
+            body: "*"
+          };
+    }
+    rpc GetUser(GetUserRequest) returns (User) {
+        option (google.api.http) = {
+            get: "/v1/users/{id}"
+          };
+    }
+    rpc ListUser(google.protobuf.Empty) returns (ListUserResponse) {
+        option (google.api.http) = {
+            get: "/v1/users"
+          };
+    }
+    rpc UpdateUser(UpdateUserRequest) returns (User) {
+        option (google.api.http) = {
+            put: "/v1/users/{id}"
+            body: "user"
+          };
+    }
+    rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/v1/users/{id}"
+          };
+    }
+}
+
+message User {
+    int32 id = 1;
+    string name = 2;
+    string password = 3;
+    string email = 4;
+    string phone = 5;
+    int32 age = 6;
+    string address = 7;
+    google.protobuf.Timestamp create_time = 8;
+    google.protobuf.Timestamp update_time = 9;
+}
+
+message GetUserRequest {
+    int32 id = 1;
+}
+
+message UpdateUserRequest {
+    int32 id = 1;
+    User user = 2;
+}
+
+message DeleteUserRequest {
+    int32 id = 1;
+}
+
+message ListUserResponse {
+    repeated User users = 1;
+}

@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    env_file:
+    - .env
+    ports:
+    - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=zyxwv
+      - POSTGRES_DB=userdb
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 1s
+      retries: 1
+
+  # grpc-apis:
+  #   image: grpc-apis
+  #   restart: always
+  #   build: .
+  #   ports:
+  #   - "8090:8090"
+  #   env_file:
+  #   - .env
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   links:
+  #   - db
