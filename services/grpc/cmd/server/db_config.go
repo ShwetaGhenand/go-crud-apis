@@ -30,6 +30,7 @@ func (c *DBConfig) url() string {
 	q := u.Query()
 	q.Set("sslmode", c.PGSSLMode)
 	u.RawQuery = q.Encode()
+
 	return u.String()
 }
 
@@ -49,5 +50,6 @@ func InitDB(c DBConfig) (*dbgen.Queries, error) {
 		return nil, fmt.Errorf("validating schema: %w", err)
 	}
 	db := dbgen.New(conn)
+
 	return db, nil
 }

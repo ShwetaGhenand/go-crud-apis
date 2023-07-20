@@ -12,6 +12,10 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+func Test() {
+	fmt.Println("test")
+}
+
 func run(conf *config) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
