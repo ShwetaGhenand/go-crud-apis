@@ -11,52 +11,38 @@ type service struct {
 }
 
 func reqToModel(req JSONUser) User {
-	m := User{}
-	m.ID = int32(req.ID)
-	m.Name = req.Name
-	m.Password = req.Password
-	m.Email = req.Email
-	if req.Phone != "" {
-		m.Phone = sql.NullString{String: req.Phone, Valid: true}
-	} else {
-		m.Phone = sql.NullString{String: req.Phone, Valid: false}
-	}
-	if req.Address != "" {
-		m.Address = sql.NullString{String: req.Address, Valid: true}
-	} else {
-		m.Address = sql.NullString{String: req.Address, Valid: false}
-	}
-	if req.Age != 0 {
-		m.Age = sql.NullInt32{Int32: int32(req.Age), Valid: true}
-	} else {
-		m.Age = sql.NullInt32{Int32: int32(req.Age), Valid: false}
+	m := User{
+		ID:       int32(req.ID),
+		Name:     req.Name,
+		Password: req.Password,
+		Email:    req.Email,
+		Phone:    sql.NullString{String: req.Phone, Valid: req.Phone != ""},
+		Address:  sql.NullString{String: req.Address, Valid: req.Address != ""},
+		Age:      sql.NullInt32{Int32: int32(req.Age), Valid: req.Age != 0},
 	}
 	return m
 }
 
 func modelToRes(user User) JSONUser {
-	res := JSONUser{}
-	if user.ID != 0 {
-		res.ID = int(user.ID)
+	res := JSONUser{
+		ID:       int(user.ID),
+		Name:     user.Name,
+		Password: user.Password,
+		Email:    user.Email,
 	}
-	if user.Name != "" {
-		res.Name = user.Name
-	}
-	if user.Password != "" {
-		res.Password = user.Password
-	}
-	if user.Email != "" {
-		res.Email = user.Email
-	}
+
 	if user.Phone.Valid {
 		res.Phone = user.Phone.String
 	}
+
 	if user.Address.Valid {
 		res.Address = user.Address.String
 	}
+
 	if user.Age.Valid {
 		res.Age = int(user.Age.Int32)
 	}
+
 	return res
 }
 
