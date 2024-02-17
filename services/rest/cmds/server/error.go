@@ -32,14 +32,16 @@ func checkError(err error) error {
 }
 
 func validate(user JSONUser) error {
-	if user.ID <= 0 {
+	switch {
+	case user.ID <= 0:
 		return &customErr{errors.New("missing id"), 400}
-	} else if user.Name == "" {
+	case user.Name == "":
 		return &customErr{errors.New("missing name"), 400}
-	} else if user.Password == "" {
+	case user.Password == "":
 		return &customErr{errors.New("missing password"), 400}
-	} else if user.Email == "" {
+	case user.Email == "":
 		return &customErr{errors.New("missing email"), 400}
+	default:
+		return nil
 	}
-	return nil
 }
