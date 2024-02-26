@@ -10,23 +10,31 @@ import (
 	"github.com/lestrrat-go/jwx/jwt"
 )
 
+// JWTSign holds the key and algorithm information for signing JWT tokens.
 type JWTSign struct {
-	key       interface{}
-	algorithm jwa.SignatureAlgorithm
+	key       []byte
+	algorithm jwt.SigningMethod
 }
 
+// NewJWTToken generates a new JWT token with the given name and secret.
 func NewJWTToken(name, secret string) (string, error) {
-	var tokenStr string
-	js := &JWTSign{key: []byte(secret), algorithm: jwa.HS256}
-	token := jwt.New()
-	if err := token.Set(`name`, name); err != nil {
-		return tokenStr, err
+	// Create JWT signer
+	signer := &JWTSign{key: []byte(secret), algorithm: jwt.SigningMethodHS256}
+
+	// Create claims for JWT
+	claims := jwt.MapClaims{
+		"name": name,
 	}
-	payload, err := jwt.Sign(token, js.algorithm, js.key)
+
+	// Create token
+	token := jwt.NewWithClaims(signer.algorithm, claims)
+
+	// Sign the token
+	tokenStr, err := token.SignedString(signer.key)
 	if err != nil {
-		return tokenStr, err
+		return "", err
 	}
-	tokenStr = string(payload)
+
 	return tokenStr, nil
 }
 
@@ -42,21 +50,30 @@ func ParseJWTToken(tokenStr, secret string) error {
 }
 
 func authMiddleware(secret string) mux.MiddlewareFunc {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			authorizationHeader := req.Header.Get("authorization")
-			bearerToken := strings.Split(authorizationHeader, " ")
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authorizationHeader := r.Header.Get("Authorization")
+			if authorizationHeader == "" {
+				log.Println("Missing Authorization token")
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+
+			bearerToken := strings.Split(authorizationHeader, "Bearer ")
 			if len(bearerToken) != 2 {
-				log.Println("missing authorization token")
-				http.Error(w, "forbidden", http.StatusForbidden)
+				log.Println("Invalid Authorization token format")
+				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
-			if err := ParseJWTToken(bearerToken[1], secret); err != nil {
-				log.Printf("error parsing authorization token %v", err)
-				http.Error(w, "forbidden", http.StatusForbidden)
+
+			token := strings.TrimSpace(bearerToken[1])
+			if err := ParseJWTToken(token, secret); err != nil {
+				log.Printf("Error parsing Authorization token: %v", err)
+				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
-			h.ServeHTTP(w, req)
+
+			next.ServeHTTP(w, r)
 		})
 	}
 }
